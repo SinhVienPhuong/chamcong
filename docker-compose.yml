@@ -1,0 +1,15 @@
+services:
+  chamcong:
+    build: .
+    container_name: chamcong
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    # Để kéo log trực tiếp từ máy chấm công trong LAN, container cần đi được tới IP máy (UDP/TCP 4370).
+    # Nếu dùng bridge mà không tới được, có thể chuyển sang: network_mode: host

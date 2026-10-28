@@ -27,7 +27,7 @@ function loadSecret() {
 
 module.exports = {
   port: parseInt(process.env.PORT, 10) || 3000,
-  host: process.env.HOST || '0.0.0.0',
+  host: process.env.LISTEN_HOST || '0.0.0.0', // không dùng HOST vì một số nền tảng tự đặt biến này
   dataDir,
   dbPath: process.env.DB_PATH || path.join(dataDir, 'chamcong.db'),
   jwtSecret: loadSecret(),

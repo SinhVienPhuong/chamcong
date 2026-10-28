@@ -72,10 +72,18 @@ if (autoMin > 0) {
 }
 
 function start() {
-  // Trên cPanel (Passenger), PORT do Passenger cấp; listen() được Passenger tiếp quản
-  return app.listen(config.port, config.host, () => {
+  // Cổng chính: PORT (cPanel/Passenger tự cấp và tiếp quản listen())
+  const main = app.listen(config.port, config.host, () => {
     console.log(`Hệ thống chấm công chạy tại http://${config.host}:${config.port}  (TZ=${config.tz})`);
   });
+  // Cổng phụ (EXTRA_PORTS, VD "80,8080"): để nền tảng deploy trỏ domain vào cổng nào cũng tới được app
+  const extras = String(process.env.EXTRA_PORTS || '').split(',').map((x) => parseInt(x, 10))
+    .filter((p) => p > 0 && p < 65536 && p !== config.port);
+  for (const p of new Set(extras)) {
+    const srv = app.listen(p, config.host, () => console.log(`  cũng nghe tại cổng ${p}`));
+    srv.on('error', (e) => console.warn(`  bỏ qua cổng ${p}: ${e.code || e.message}`));
+  }
+  return main;
 }
 
 if (require.main === module) start();

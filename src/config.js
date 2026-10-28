@@ -7,7 +7,13 @@ const path = require('path');
 const crypto = require('crypto');
 
 const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-fs.mkdirSync(dataDir, { recursive: true });
+try {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.accessSync(dataDir, fs.constants.W_OK);
+} catch (e) {
+  console.error(`Không ghi được vào thư mục dữ liệu ${dataDir}: ${e.message}. Kiểm tra DATA_DIR và quyền của volume.`);
+  process.exit(1);
+}
 
 // JWT secret: lấy từ env, nếu không có thì sinh ngẫu nhiên và lưu lại để session không mất khi restart
 function loadSecret() {

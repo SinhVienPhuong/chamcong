@@ -33,8 +33,11 @@ export function dialSVG({ withShift = true, label = 'Đồng hồ' } = {}) {
     nums += `<text class="num" x="${x.toFixed(2)}" y="${y.toFixed(2)}">${String(h).padStart(2, '0')}</text>`;
   }
   return `<svg class="dial" viewBox="0 0 200 200" role="img" aria-label="${label}">
-    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd29d"/><stop offset="1" stop-color="#b08a4e"/></linearGradient></defs>
-    <circle cx="100" cy="100" r="97" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.07)"/>
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd29d"/><stop offset="1" stop-color="#b08a4e"/></linearGradient>
+      <linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1dcae"/><stop offset=".45" stop-color="#9c7740"/><stop offset=".7" stop-color="#e3c690"/><stop offset="1" stop-color="#7d5d2e"/></linearGradient>
+      <radialGradient id="${id}f" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#22343f"/><stop offset="1" stop-color="#0d171e"/></radialGradient></defs>
+    <circle cx="100" cy="100" r="98" fill="url(#${id}f)" stroke="url(#${id}b)" stroke-width="2.2"/>
+    <circle cx="100" cy="100" r="95.5" fill="none" stroke="rgba(255,255,255,.06)"/>
     ${ticks}${nums}
     ${withShift ? `<path class="shift-arc" d=""/><path class="done-arc" d="" style="stroke:url(#${id})"/><circle class="mark-in" r="4.2" cx="-20" cy="-20"/><circle class="mark-out" r="4.2" cx="-20" cy="-20"/>` : ''}
     <line class="hand-h" x1="100" y1="100" x2="100" y2="54"/>

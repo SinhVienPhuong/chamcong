@@ -51,8 +51,16 @@ router.get('/dashboard', requireRole('admin', 'manager'), (req, res) => {
   const { result, holidays } = calc.computeRange(users, d, d);
   const stats = { total: users.length, scheduled: 0, present: 0, late: 0, leave: 0, absent: 0, notYet: 0 };
   const late = [], absentees = [], onLeave = [];
+  const depMap = new Map();
   for (const u of users) {
     const day = result.get(u.id)[0];
+    const dk = u.department_name || 'Chưa phân phòng';
+    if (!depMap.has(dk)) depMap.set(dk, { name: dk, scheduled: 0, present: 0, late: 0, leave: 0 });
+    const dp = depMap.get(dk);
+    if (day.isWorkday) dp.scheduled++;
+    if (day.checkIn) dp.present++;
+    if (day.lateMin) dp.late++;
+    if (day.status === 'leave') dp.leave++;
     const info = { id: u.id, code: u.code, full_name: u.full_name, department_name: u.department_name, checkIn: day.checkIn, plannedIn: day.plannedIn, lateMin: day.lateMin, leaveType: day.leaveType };
     if (day.isWorkday) stats.scheduled++;
     if (day.checkIn) stats.present++;
@@ -72,7 +80,7 @@ router.get('/dashboard', requireRole('admin', 'manager'), (req, res) => {
   });
   const recent = db.prepare(`SELECT l.ts, l.source, u.code, u.full_name FROM attendance_logs l JOIN users u ON u.id = l.user_id
     WHERE ${sc.where} AND l.ts >= ? ORDER BY l.ts DESC LIMIT 12`).all(...sc.params, d + ' 00:00:00');
-  res.json({ date: d, holiday: holidays.get(d) || null, stats, late, absentees, onLeave, trend, recent });
+  res.json({ date: d, holiday: holidays.get(d) || null, stats, late, absentees, onLeave, trend, recent, departments: [...depMap.values()] });
 });
 
 module.exports = router;

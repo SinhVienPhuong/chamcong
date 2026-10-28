@@ -49,6 +49,13 @@ const P = {
   check: '<path d="M4 12l5 5L20 6"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 019.5 4 7 7 0 1020 14.5z"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>',
+  ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/>',
+  inbox: '<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 2h6l1-2h5"/>',
+  more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
 };
 export const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || ''}</svg>`;
 
@@ -56,9 +63,10 @@ export const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="curr
 export function toast(msg, type = 'ok') {
   const el = document.createElement('div');
   el.className = 'toast' + (type === 'err' ? ' err' : '');
-  el.textContent = msg;
+  el.setAttribute('role', type === 'err' ? 'alert' : 'status');
+  el.innerHTML = `${icon(type === 'err' ? 'alert' : 'ok')}<div>${esc(msg)}</div>`;
   $('#toasts').appendChild(el);
-  setTimeout(() => el.remove(), type === 'err' ? 6000 : 3200);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 260); }, type === 'err' ? 6000 : 3200);
 }
 
 // ---------- Modal ----------
@@ -66,7 +74,7 @@ export function modal({ title, body, foot = '', size = '' }) {
   const back = document.createElement('div');
   back.className = 'modal-back';
   back.innerHTML = `<div class="modal ${size}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="modal-head"><h2>${esc(title)}</h2><button class="x" aria-label="Đóng" data-close>&times;</button></div>
+    <div class="modal-head"><h2>${esc(title)}</h2><button class="x" aria-label="Đóng" data-close>${icon('x')}</button></div>
     <div class="modal-body">${body}</div>${foot ? `<div class="modal-foot">${foot}</div>` : ''}</div>`;
   const prevFocus = document.activeElement;
   const close = () => { back.remove(); document.removeEventListener('keydown', onKey); prevFocus?.focus?.(); };
@@ -160,7 +168,47 @@ export function openForm({ title, fields, values = {}, submit = 'Lưu', size = '
 export const opts = (arr, valueKey = 'id', labelFn = (x) => x.name, empty) =>
   [...(empty !== undefined ? [{ value: '', label: empty }] : []), ...arr.map((x) => ({ value: x[valueKey], label: labelFn(x) }))];
 
-export const emptyState = (title, hint = '') => `<div class="empty"><strong>${esc(title)}</strong>${hint}</div>`;
+export const emptyState = (title, hint = '', ic = 'inbox') => `<div class="empty"><div class="ic">${icon(ic)}</div><strong>${esc(title)}</strong>${hint}</div>`;
+
+// ---------- Avatar chữ cái: màu ổn định theo tên ----------
+export function initials(name) {
+  const w = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!w.length) return '?';
+  return (w.length === 1 ? w[0].slice(0, 2) : w[0][0] + w[w.length - 1][0]).toUpperCase();
+}
+export function hue(name) { let h = 0; for (const c of String(name)) h = (h * 31 + c.codePointAt(0)) % 360; return h; }
+export const avatar = (name, cls = '') => `<span class="av ${cls}" style="--h:${hue(name)}" aria-hidden="true">${esc(initials(name))}</span>`;
+
+// ---------- Biểu đồ nhỏ (SVG thuần) ----------
+export function sparkline(values, color = 'var(--primary)') {
+  const v = values.length ? values : [0];
+  const max = Math.max(1, ...v), w = 84, h = 30, step = v.length > 1 ? w / (v.length - 1) : w;
+  const pts = v.map((x, i) => `${(i * step).toFixed(1)},${(h - 3 - (x / max) * (h - 6)).toFixed(1)}`);
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts[pts.length - 1].split(',')[0]}" cy="${pts[pts.length - 1].split(',')[1]}" r="2.6" fill="${color}"/></svg>`;
+}
+export function donut(parts, centerTop, centerSub) {
+  const total = parts.reduce((a, p) => a + p.value, 0) || 1, r = 15.9155, C = 100;
+  let off = 0;
+  const segs = parts.filter((p) => p.value > 0).map((p) => {
+    const len = (p.value / total) * C;
+    const seg = `<circle r="${r}" cx="21" cy="21" fill="none" stroke="${p.color}" stroke-width="4.2" stroke-dasharray="${Math.max(0, len - .6)} ${C - Math.max(0, len - .6)}" stroke-dashoffset="${-off}"/>`;
+    off += len; return seg;
+  }).join('');
+  return `<div class="donut"><svg viewBox="0 0 42 42" aria-hidden="true"><circle r="${r}" cx="21" cy="21" fill="none" stroke="var(--surface-3)" stroke-width="4.2"/>${segs}</svg>
+    <div class="c"><div><b>${esc(centerTop)}</b><span>${esc(centerSub)}</span></div></div></div>`;
+}
+
+// ---------- Giao diện sáng/tối ----------
+const THEME_KEY = 'cc-theme';
+export function getThemePref() { try { return localStorage.getItem(THEME_KEY) || 'system'; } catch { return 'system'; } }
+export function applyTheme(pref = getThemePref()) {
+  const dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#081016' : '#16242e');
+}
+export function setThemePref(pref) { try { localStorage.setItem(THEME_KEY, pref); } catch { /* ignore */ } applyTheme(pref); }
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme());
 
 export function showSecret(title, intro, secret) {
   modal({ title, size: 'sm', body: `<p>${intro}</p><div class="secret">${esc(secret)}</div><p class="muted small" style="margin-top:12px">Mật khẩu chỉ hiển thị một lần. Người dùng sẽ phải đổi mật khẩu ở lần đăng nhập đầu tiên.</p>`,

@@ -25,12 +25,12 @@ export async function render(view, ctx, params) {
           ${self ? `<button class="btn primary" id="adj">${icon('plus')} Giải trình</button>` : ''}
         </div></div>
       <div class="stats" style="margin-bottom:18px">
-        <div class="stat tone-ok"><div class="v">${num(s.workUnits)}<small> / ${num(s.stdUnits)}</small></div><div class="l">Công thực tế / công chuẩn</div></div>
-        <div class="stat"><div class="v">${num(s.totalPaidUnits)}</div><div class="l">Tổng công hưởng lương</div></div>
-        <div class="stat tone-late"><div class="v">${s.lateCount}<small> lần</small></div><div class="l">Đi muộn, ${mins(s.lateMin) || '0 phút'}</div></div>
-        <div class="stat tone-leave"><div class="v">${num(s.paidLeaveUnits + s.sickUnits + s.unpaidUnits, 1)}</div><div class="l">Ngày nghỉ phép (còn ${num(data.leave.remaining, 1)} ngày phép năm)</div></div>
-        <div class="stat tone-absent"><div class="v">${s.absentDays + s.missingDays}</div><div class="l">Vắng / thiếu chấm công</div></div>
-        <div class="stat"><div class="v">${num(s.ot.weekday + s.ot.weekend + s.ot.holiday, 1)}<small>h</small></div><div class="l">Tăng ca được tính</div></div>
+        <div class="stat tone-ok"><div class="l">Công thực tế / chuẩn</div><div class="v">${num(s.workUnits)}<small> / ${num(s.stdUnits)}</small></div></div>
+        <div class="stat tone-brass"><div class="l">Tổng công hưởng lương</div><div class="v">${num(s.totalPaidUnits)}</div></div>
+        <div class="stat tone-late"><div class="l">Đi muộn</div><div class="v">${s.lateCount}<small> lần, ${mins(s.lateMin) || '0 phút'}</small></div></div>
+        <div class="stat tone-leave"><div class="l">Ngày nghỉ phép</div><div class="v">${num(s.paidLeaveUnits + s.sickUnits + s.unpaidUnits, 1)}<small> còn ${num(data.leave.remaining, 1)} phép năm</small></div></div>
+        <div class="stat tone-absent"><div class="l">Vắng, thiếu chấm</div><div class="v">${s.absentDays + s.missingDays}</div></div>
+        <div class="stat"><div class="l">Tăng ca được tính</div><div class="v">${num(s.ot.weekday + s.ot.weekend + s.ot.holiday, 1)}<small> giờ</small></div></div>
       </div>
       <section class="panel"><div class="panel-body">
         <div class="cal">
